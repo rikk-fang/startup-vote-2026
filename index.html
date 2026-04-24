@@ -294,13 +294,68 @@
       cursor: pointer;
     }
 
-    footer {
+   footer {
       font-size: 0.75rem;
       color: #3b3b5c;
       margin-top: auto;
       padding-top: 2rem;
     }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #1e1e2e;
+      border: 1px solid #3b3b5c;
+      border-radius: 8px;
+      color: #a78bfa;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    body.light {
+      background: #f5f5fa;
+      color: #1a1a2e;
+    }
+
+    body.light .budget-bar,
+    body.light .group-card,
+    body.light .best-btn {
+      background: #ffffff;
+      border-color: #d1d5db;
+    }
+
+    body.light .coin-row input[type=number],
+    body.light .setup-field input,
+    body.light .setup-field select,
+    body.light .group-entry input {
+      background: #f0f0f8;
+      border-color: #d1d5db;
+      color: #1a1a2e;
+    }
+
+    body.light .budget-label,
+    body.light .section-title,
+    body.light .subtitle {
+      color: #6b7280;
+    }
+
+    body.light .theme-toggle {
+      background: #ffffff;
+      border-color: #d1d5db;
+    }
+
+    body.light .add-group-btn {
+      background: #f0f0f8;
+    }
+
+    body.light footer {
+      color: #d1d5db;
+    }
   </style>
+ 
 </head>
 <body>
 
@@ -445,7 +500,16 @@
       document.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', e => {
           state.groups.splice(+e.target.dataset.remove, 1);
-          render();
+          const toggle = document.createElement('button');
+  toggle.className = 'theme-toggle';
+  toggle.textContent = '☀ Light';
+  toggle.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
+  });
+  document.body.appendChild(toggle);
+
+  render();
         });
       });
 
