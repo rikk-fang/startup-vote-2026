@@ -578,7 +578,8 @@
         });
       });
 
-      document.getElementById('submit-btn')?.addEventListener('click', async () => {
+      document.getElementById('submit-btn')?.addEventListener('click', async (e) => {
+        e.target.disabled = true;
         const payload = {
           class: state.class,
           group_voted: state.bestVote,
