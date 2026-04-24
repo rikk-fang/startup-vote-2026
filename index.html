@@ -475,12 +475,14 @@
     `;
   }
 
-  function thankYouHTML() {
+function thankYouHTML() {
     return `
       <div class="thank-you">
         <h2>Vote submitted!</h2>
         <p>Pass the device to the next student.</p>
         <button class="next-btn" id="next-btn">Next voter</button>
+        <br/><br/>
+        <button class="next-btn" id="setup-btn" style="background:#2e2e4e; color:#a78bfa; font-size:0.85rem; padding:0.6rem 1.5rem;">↩ Back to setup</button>
       </div>
     `;
   }
@@ -497,27 +499,10 @@
         });
       });
 
-      document.querySelectorAll('[data-remove]').forEach(btn => {
+document.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', e => {
           state.groups.splice(+e.target.dataset.remove, 1);
-          const toggle = document.createElement('button');
-  toggle.className = 'theme-toggle';
-  toggle.textContent = '☀ Light';
-  toggle.addEventListener('click', () => {
-    document.body.classList.toggle('light');
-    toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
-  });
-  document.body.appendChild(toggle);
-const toggle = document.createElement('button');
-  toggle.className = 'theme-toggle';
-  toggle.textContent = '☀ Light';
-  toggle.addEventListener('click', () => {
-    document.body.classList.toggle('light');
-    toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
-  });
-  document.body.appendChild(toggle);
-
-  render();
+          render();
         });
       });
 
@@ -598,7 +583,7 @@ const toggle = document.createElement('button');
       });
     }
 
-    if (state.screen === 'thankyou') {
+if (state.screen === 'thankyou') {
       document.getElementById('next-btn')?.addEventListener('click', () => {
         state.allocations = {};
         state.locked = {};
@@ -606,10 +591,27 @@ const toggle = document.createElement('button');
         state.screen = 'voting';
         render();
       });
+
+      document.getElementById('setup-btn')?.addEventListener('click', () => {
+        state.allocations = {};
+        state.locked = {};
+        state.bestVote = null;
+        state.screen = 'setup';
+        render();
+      });
     }
-  }
+// Theme toggle — created once, persists across renders
+  const toggle = document.createElement('button');
+  toggle.className = 'theme-toggle';
+  toggle.textContent = '☀ Light';
+  toggle.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
+  });
+  document.body.appendChild(toggle);
 
   render();
+</script>
 </script>
 </body>
 </html>
