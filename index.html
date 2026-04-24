@@ -508,6 +508,14 @@
     toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
   });
   document.body.appendChild(toggle);
+const toggle = document.createElement('button');
+  toggle.className = 'theme-toggle';
+  toggle.textContent = '☀ Light';
+  toggle.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    toggle.textContent = document.body.classList.contains('light') ? '☾ Dark' : '☀ Light';
+  });
+  document.body.appendChild(toggle);
 
   render();
         });
