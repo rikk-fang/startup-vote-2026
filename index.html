@@ -363,8 +363,89 @@
       background: #e8e8f8;
     }
 
-    body.light footer {
+body.light footer {
       color: #d1d5db;
+    }
+
+    .coin-display {
+      flex: 1;
+      background: #0f0f1a;
+      border: 1px solid #3b3b5c;
+      border-radius: 8px;
+      color: #e8e8f0;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .coin-display.focused {
+      border-color: #a78bfa;
+      color: #a78bfa;
+    }
+
+    .keypad {
+      margin-top: 1rem;
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .key {
+      background: #2e2e4e;
+      color: #e8e8f0;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .key:active { background: #a78bfa; color: #0f0f1a; }
+
+    .key-wide {
+      background: #3b1f1f;
+      color: #ef4444;
+    }
+
+    .key-allin {
+      grid-column: 1 / -1;
+      background: #1a2e1a;
+      color: #34d399;
+      font-size: 0.95rem;
+    }
+
+    .key-allin:active { background: #34d399; color: #0f0f1a; }
+
+    body.light .coin-display {
+      background: #f0f0f8;
+      border-color: #d1d5db;
+      color: #1a1a2e;
+    }
+
+    body.light .coin-display.focused {
+      border-color: #a78bfa;
+      color: #a78bfa;
+    }
+
+    body.light .key {
+      background: #e8e8f8;
+      color: #1a1a2e;
+    }
+
+    body.light .key-wide {
+      background: #fde8e8;
+      color: #ef4444;
+    }
+
+    body.light .key-allin {
+      background: #e8f8f0;
+      color: #059669;
     }
   </style>
 </head>
@@ -376,13 +457,15 @@
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyScoyGaCRh9HUwjkkaUtlMTCXjD8eX4kV_wuplLLqGT6Khjm8XZYLqDALPcwtuCok2/exec';
   const BUDGET = 100000;
 
-  let state = {
+let state = {
     screen: 'setup',
     class: '',
     groups: [],
     allocations: {},
     locked: {},
-    bestVote: null
+    bestVote: null,
+    activeGroup: null,
+    keypadValue: ''
   };
 
   // Theme toggle — created once, never touched by render()
@@ -415,20 +498,35 @@
         <button class="remove-btn" data-remove="${i}">✕</button>
       </div>
     `).join('');
-
-    return `
-      <div id="setup-screen">
-        <h1>Startup Vote 2026</h1>
-        <p class="subtitle">Setup — Teacher only</p>
-
-        <div class="setup-field">
-          <label>Class</label>
-          <select id="class-select">
-            <option value="" disabled ${!state.class ? 'selected' : ''}>Select class</option>
-            <option value="Turma A" ${state.class === 'Turma A' ? 'selected' : ''}>Turma A</option>
-            <option value="Turma B" ${state.class === 'Turma B' ? 'selected' : ''}>Turma B</option>
-          </select>
+return `
+        <div class="group-card ${state.activeGroup === g ? 'active' : ''}">
+          <div class="group-name">${g}</div>
+          <div class="coin-row">
+            <div class="coin-display ${state.activeGroup === g ? 'focused' : ''}" data-open="${g}">
+              ${state.allocations[g] ? state.allocations[g].toLocaleString() : '0'}
+            </div>
+            <button class="lock-btn" data-lock="${g}">Lock in</button>
+          </div>
+          ${state.activeGroup === g ? `
+          <div class="keypad">
+            <div class="keypad-grid">
+              <button class="key" data-key="7">7</button>
+              <button class="key" data-key="8">8</button>
+              <button class="key" data-key="9">9</button>
+              <button class="key" data-key="4">4</button>
+              <button class="key" data-key="5">5</button>
+              <button class="key" data-key="6">6</button>
+              <button class="key" data-key="1">1</button>
+              <button class="key" data-key="2">2</button>
+              <button class="key" data-key="3">3</button>
+              <button class="key key-wide" data-key="clear">CLR</button>
+              <button class="key" data-key="0">0</button>
+              <button class="key" data-key="back">⌫</button>
+              <button class="key key-allin" data-key="allin">All In</button>
+            </div>
+          </div>` : ''}
         </div>
+      `;
 
         <div class="setup-field">
           <label>Presenting groups</label>
@@ -544,20 +642,51 @@
       });
     }
 
-    if (state.screen === 'voting') {
-      document.querySelectorAll('.coin-input').forEach(input => {
-        input.addEventListener('input', e => {
-          const group = e.target.dataset.group;
-          const val = parseInt(e.target.value) || 0;
+if (state.screen === 'voting') {
+      document.querySelectorAll('[data-open]').forEach(display => {
+        display.addEventListener('click', e => {
+          const group = e.target.dataset.open;
+          if (state.locked[group]) return;
+          if (state.activeGroup === group) {
+            state.activeGroup = null;
+            state.keypadValue = '';
+          } else {
+            state.activeGroup = group;
+            state.keypadValue = state.allocations[group] ? String(state.allocations[group]) : '';
+          }
+          render();
+        });
+      });
+
+      document.querySelectorAll('.key').forEach(key => {
+        key.addEventListener('click', e => {
+          const k = e.target.dataset.key;
+          const group = state.activeGroup;
+          if (!group) return;
+
           const lockedSpent = Object.entries(state.allocations)
             .filter(([g]) => state.locked[g] && g !== group)
             .reduce((a, [, v]) => a + v, 0);
           const unlockedOthers = Object.entries(state.allocations)
             .filter(([g]) => !state.locked[g] && g !== group)
             .reduce((a, [, v]) => a + v, 0);
-          const max = BUDGET - lockedSpent - unlockedOthers;
-          state.allocations[group] = Math.min(val, max);
-          if (state.allocations[group] !== val) e.target.value = state.allocations[group];
+          const maxAllowed = BUDGET - lockedSpent - unlockedOthers;
+
+          if (k === 'clear') {
+            state.keypadValue = '';
+            state.allocations[group] = 0;
+          } else if (k === 'back') {
+            state.keypadValue = state.keypadValue.slice(0, -1);
+            state.allocations[group] = Math.min(parseInt(state.keypadValue) || 0, maxAllowed);
+          } else if (k === 'allin') {
+            state.allocations[group] = maxAllowed;
+            state.keypadValue = String(maxAllowed);
+          } else {
+            const next = state.keypadValue + k;
+            const val = Math.min(parseInt(next) || 0, maxAllowed);
+            state.keypadValue = String(val);
+            state.allocations[group] = val;
+          }
           render();
         });
       });
@@ -567,6 +696,8 @@
           const group = e.target.dataset.lock;
           state.allocations[group] = state.allocations[group] || 0;
           state.locked[group] = true;
+          state.activeGroup = null;
+          state.keypadValue = '';
           render();
         });
       });
